@@ -37,8 +37,22 @@ function Get-ProcessOutput
     return $output
 }
 
-# Set source folder for PDF files
+# Create output folder
+$OutputPath = "$PSScriptRoot\output\"
+If(!(test-path $OutputPath))
+{
+    New-Item -ItemType Directory -Force -Path $OutputPath
+}
+
+# Create source folder
 $SourceFolder = "$PSScriptRoot\pdf\"
+If(!(test-path $SourceFolder))
+{
+      New-Item -ItemType Directory -Force -Path $SourceFolder
+}
+
+# Set alternate source folder for PDF files
+# $SourceFolder = "$PSScriptRoot\test\"
 
 # Get a list of the PDF files
 $files = Get-ChildItem "$SourceFolder" -Filter *.pdf
@@ -77,13 +91,13 @@ foreach ($f in $files) {
     Write-Host Processing: [$CurrentPDF] $f with $TotalPages[3] pages
     
     # Extract first page (Cover)
-    .\pdftocairo -f 1 -l 1 -jpeg -q $SourceFolder/$f output/[$CurrentPDF]-$basefilename-01-Cover
+    .\pdftocairo -f 1 -l 1 -jpeg -q $SourceFolder/$f $OutputPath/[$CurrentPDF]-$basefilename-01-Cover
     
     # Extract last page (Back)
-    .\pdftocairo -f $TotalPages[3] -l $TotalPages[3] -jpeg -q $SourceFolder/$f output/[$CurrentPDF]-$basefilename-02-Back
+    .\pdftocairo -f $TotalPages[3] -l $TotalPages[3] -jpeg -q $SourceFolder/$f $OutputPath/[$CurrentPDF]-$basefilename-02-Back
     
     # Add to report object
-    $report = "" | Select "Number", "Title", "Pages"
+    $report = "" | Select-Object "Number", "Title", "Pages"
 
     # Fill the object
     $report.number = $CurrentPDF
@@ -98,20 +112,22 @@ foreach ($f in $files) {
 }
 
 # After the loop, export the array to CSV and backup the old one
+Write-Host "---------------------------------------------------"
+Write-Host Finished processing ($PDFIndex + 1) files
 Write-Host Creating Report
 $fileToCheck = "$PSScriptRoot\output\pdftoimage.csv"
 if (Test-Path $fileToCheck -PathType leaf) 
 {
-    Remove-Item "$PSScriptRoot\output\pdftoimage.csv"
-    $outarray | export-csv "$PSScriptRoot\output\pdftoimage.csv" -NoTypeInformation
+    Remove-Item "$OutputPath\pdftoimage.csv"
+    $outarray | export-csv "$OutputPath\pdftoimage.csv" -NoTypeInformation
 }
 else
 {
-    $outarray | export-csv "$PSScriptRoot\output\pdftoimage.csv" -NoTypeInformation
+    $outarray | export-csv "$OutputPath\pdftoimage.csv" -NoTypeInformation
 }
 Write-Host Done!
 pause
 
 ###---------------------------------------------------------------
 ### END OF LINE
-###---------------------------------------------------------------
+###---------------------------------------------------------------  
