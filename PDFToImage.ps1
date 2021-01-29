@@ -12,12 +12,11 @@
 
 ### Extract command output of both STDERR/STDOUT
 ### https://jackgruber.github.io/2018-05-11-ps-get-process-output/
-function Get-ProcessOutput
-{
+function Get-ProcessOutput {
     Param (
-                [Parameter(Mandatory=$true)]
-                $FileName,
-                $Args
+        [Parameter(Mandatory = $true)]
+        $FileName,
+        $Args
     )
     
     $process = New-Object System.Diagnostics.Process
@@ -25,7 +24,7 @@ function Get-ProcessOutput
     $process.StartInfo.RedirectStandardOutput = $true
     $process.StartInfo.RedirectStandardError = $true
     $process.StartInfo.FileName = $FileName
-    if($Args) { $process.StartInfo.Arguments = $Args }
+    if ($Args) { $process.StartInfo.Arguments = $Args }
     $out = $process.Start()
     
     $StandardError = $process.StandardError.ReadToEnd()
@@ -37,18 +36,16 @@ function Get-ProcessOutput
     return $output
 }
 
-# Create output folder
+# Create output folder (! Must have trailing space !)
 $OutputPath = "$PSScriptRoot\output\"
-If(!(test-path $OutputPath))
-{
+If (!(test-path $OutputPath)) {
     New-Item -ItemType Directory -Force -Path $OutputPath
 }
 
-# Create source folder
+# Create source folder (! Must have trailing space !)
 $SourceFolder = "$PSScriptRoot\pdf\"
-If(!(test-path $SourceFolder))
-{
-      New-Item -ItemType Directory -Force -Path $SourceFolder
+If (!(test-path $SourceFolder)) {
+    New-Item -ItemType Directory -Force -Path $SourceFolder
 }
 
 # Set alternate source folder for PDF files
@@ -77,7 +74,8 @@ foreach ($f in $files) {
     # Rename files for easy indexing
     if ($PDFIndex -le 8) {
         $CurrentPDF = "0" + ($PDFIndex + 1)
-    } else {
+    }
+    else {
         $CurrentPDF = $PDFIndex + 1
     }
 
@@ -85,7 +83,7 @@ foreach ($f in $files) {
     $CountPages = Get-ProcessOutput -FileName ".\exiftool.exe" -Args $Arg
     
     # Extract page count from Exiftool output
-    $TotalPages = (-split $CountPages).ForEach({ "$_" })   
+    $TotalPages = (-split $CountPages).ForEach( { "$_" })   
 
     # Begin PDF processing
     Write-Host Processing: [$CurrentPDF] $f with $TotalPages[3] pages
@@ -116,13 +114,11 @@ Write-Host "---------------------------------------------------"
 Write-Host Finished processing ($PDFIndex + 1) files
 Write-Host Creating Report
 $fileToCheck = "$PSScriptRoot\output\pdftoimage.csv"
-if (Test-Path $fileToCheck -PathType leaf) 
-{
+if (Test-Path $fileToCheck -PathType leaf) {
     Remove-Item "$OutputPath\pdftoimage.csv"
     $outarray | export-csv "$OutputPath\pdftoimage.csv" -NoTypeInformation
 }
-else
-{
+else {
     $outarray | export-csv "$OutputPath\pdftoimage.csv" -NoTypeInformation
 }
 Write-Host Done!
